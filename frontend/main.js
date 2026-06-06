@@ -153,7 +153,7 @@ async function doUpload(file, { barEl, pctEl, progressEl, btnEl, afterSuccess })
     clearInterval(ticker);
     if (progressEl) progressEl.classList.add('hidden');
     btnEl.disabled = false;
-    alert('Network error. Is the backend running on port 5000?');
+    alert('Upload failed: ' + err.message);
   }
 }
 
