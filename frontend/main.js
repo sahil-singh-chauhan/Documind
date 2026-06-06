@@ -296,6 +296,7 @@ async function renderPage(pageNum, container, filename) {
   const viewport = page.getViewport({ scale: 1.2 });
   wrapper.style.width = `${viewport.width}px`;
   wrapper.style.height = `${viewport.height}px`;
+  wrapper.style.setProperty('--scale-factor', viewport.scale);
 
   // Create canvas
   const canvas = document.createElement('canvas');
