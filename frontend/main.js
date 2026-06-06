@@ -3,47 +3,47 @@ sessionStorage.clear();
 
 // ── State ─────────────────────────────────────────────────────────────────────
 let currentSessionId = null;   // locked after first upload
-let isPdfUploaded    = false;
-let uploadedDocs     = [];     // [{ name, fileUrl, isPdf }] ordered
+let isPdfUploaded = false;
+let uploadedDocs = [];     // [{ name, fileUrl, isPdf }] ordered
 
 // ── DOM ───────────────────────────────────────────────────────────────────────
-const docPanelEmpty    = document.getElementById('doc-panel-empty');
-const docPanelActive   = document.getElementById('doc-panel-active');
-const docTabsEl        = document.getElementById('doc-tabs');
-const docViewerEl      = document.getElementById('doc-viewer');
-const clearSessionBtn  = document.getElementById('clear-session-btn');
+const docPanelEmpty = document.getElementById('doc-panel-empty');
+const docPanelActive = document.getElementById('doc-panel-active');
+const docTabsEl = document.getElementById('doc-tabs');
+const docViewerEl = document.getElementById('doc-viewer');
+const clearSessionBtn = document.getElementById('clear-session-btn');
 
 // Main upload form (empty state)
-const uploadFormMain   = document.getElementById('upload-form-main');
-const pdfFileMain      = document.getElementById('pdf-file-main');
-const uploadBtnMain    = document.getElementById('upload-btn-main');
-const dropZoneMain     = document.getElementById('drop-zone-main');
-const mainProgress     = document.getElementById('main-progress');
-const mainPct          = document.getElementById('main-pct');
-const mainBar          = document.getElementById('main-bar');
+const uploadFormMain = document.getElementById('upload-form-main');
+const pdfFileMain = document.getElementById('pdf-file-main');
+const uploadBtnMain = document.getElementById('upload-btn-main');
+const dropZoneMain = document.getElementById('drop-zone-main');
+const mainProgress = document.getElementById('main-progress');
+const mainPct = document.getElementById('main-pct');
+const mainBar = document.getElementById('main-bar');
 
 // Drawer
-const btnAddDoc        = document.getElementById('btn-add-doc');
-const uploadDrawer     = document.getElementById('upload-drawer');
-const drawerOverlay    = document.getElementById('drawer-overlay');
-const btnCloseDrawer   = document.getElementById('btn-close-drawer');
+const btnAddDoc = document.getElementById('btn-add-doc');
+const uploadDrawer = document.getElementById('upload-drawer');
+const drawerOverlay = document.getElementById('drawer-overlay');
+const btnCloseDrawer = document.getElementById('btn-close-drawer');
 const uploadFormDrawer = document.getElementById('upload-form-drawer');
-const pdfFileDrawer    = document.getElementById('pdf-file-drawer');
-const uploadBtnDrawer  = document.getElementById('upload-btn-drawer');
-const dropZoneDrawer   = document.getElementById('drop-zone-drawer');
-const drawerProgress   = document.getElementById('drawer-progress');
-const drawerPct        = document.getElementById('drawer-pct');
-const drawerBar        = document.getElementById('drawer-bar');
+const pdfFileDrawer = document.getElementById('pdf-file-drawer');
+const uploadBtnDrawer = document.getElementById('upload-btn-drawer');
+const dropZoneDrawer = document.getElementById('drop-zone-drawer');
+const drawerProgress = document.getElementById('drawer-progress');
+const drawerPct = document.getElementById('drawer-pct');
+const drawerBar = document.getElementById('drawer-bar');
 
 // Chat
-const chatForm       = document.getElementById('chat-form');
-const questionInput  = document.getElementById('question');
-const sendBtn        = document.getElementById('send-btn');
-const chatBox        = document.getElementById('chat-box');
-const thinkingPopup  = document.getElementById('thinking-popup');
+const chatForm = document.getElementById('chat-form');
+const questionInput = document.getElementById('question');
+const sendBtn = document.getElementById('send-btn');
+const chatBox = document.getElementById('chat-box');
+const thinkingPopup = document.getElementById('thinking-popup');
 
 // ── API ───────────────────────────────────────────────────────────────────────
-const API_BASE_URL = 'http://127.0.0.1:5000';
+const API_BASE_URL = 'https://documind-ac2q.onrender.com';
 
 // ── Warn before reload if session is active ───────────────────────────────────
 window.addEventListener('beforeunload', (e) => {
@@ -56,7 +56,7 @@ window.addEventListener('beforeunload', (e) => {
 // ── Accepted extensions ───────────────────────────────────────────────────────
 const ACCEPTED = ['.pdf', '.docx', '.doc', '.txt'];
 const isPdfExt = (name) => name.toLowerCase().endsWith('.pdf');
-const isOk     = (name) => ACCEPTED.some(e => name.toLowerCase().endsWith(e));
+const isOk = (name) => ACCEPTED.some(e => name.toLowerCase().endsWith(e));
 
 // ═════════════════════════════════════════════════════════════════════════════
 // DROP-ZONE WIRING  (works for both the main zone and the drawer zone)
@@ -64,13 +64,13 @@ const isOk     = (name) => ACCEPTED.some(e => name.toLowerCase().endsWith(e));
 function wireDropZone(zone, input, btn, hintSelector = '.drop-hint') {
   const hint = zone.querySelector(hintSelector);
 
-  ['dragenter','dragover','dragleave','drop'].forEach(ev =>
+  ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(ev =>
     zone.addEventListener(ev, e => { e.preventDefault(); e.stopPropagation(); })
   );
-  ['dragenter','dragover'].forEach(ev =>
+  ['dragenter', 'dragover'].forEach(ev =>
     zone.addEventListener(ev, () => zone.classList.add('dragover'))
   );
-  ['dragleave','drop'].forEach(ev =>
+  ['dragleave', 'drop'].forEach(ev =>
     zone.addEventListener(ev, () => zone.classList.remove('dragover'))
   );
   zone.addEventListener('drop', e => {
@@ -92,7 +92,7 @@ function wireDropZone(zone, input, btn, hintSelector = '.drop-hint') {
   }
 }
 
-wireDropZone(dropZoneMain,   pdfFileMain,   uploadBtnMain);
+wireDropZone(dropZoneMain, pdfFileMain, uploadBtnMain);
 wireDropZone(dropZoneDrawer, pdfFileDrawer, uploadBtnDrawer);
 
 // ═════════════════════════════════════════════════════════════════════════════
@@ -123,7 +123,7 @@ async function doUpload(file, { barEl, pctEl, progressEl, btnEl, afterSuccess })
     const headers = {};
     if (currentSessionId) headers['x-session-id'] = currentSessionId;
 
-    const res  = await fetch(`${API_BASE_URL}/upload`, { method: 'POST', headers, body: formData });
+    const res = await fetch(`${API_BASE_URL}/upload`, { method: 'POST', headers, body: formData });
     const data = await res.json();
 
     clearInterval(ticker);
@@ -164,10 +164,10 @@ uploadFormMain.addEventListener('submit', async (e) => {
 
   // We use the main form's upload button itself as a progress indicator
   await doUpload(file, {
-    barEl:       mainBar,
-    pctEl:       mainPct,
-    progressEl:  mainProgress,
-    btnEl:       uploadBtnMain,
+    barEl: mainBar,
+    pctEl: mainPct,
+    progressEl: mainProgress,
+    btnEl: uploadBtnMain,
     afterSuccess: (doc) => {
       // Transition left panel from empty → active
       docPanelEmpty.classList.add('hidden');
@@ -244,19 +244,19 @@ let currentPdfDoc = null;
 async function showDoc(doc) {
   const pdfContainer = document.getElementById('pdf-container');
   const placeholderContainer = document.getElementById('placeholder-container');
-  
+
   pdfContainer.innerHTML = '';
   placeholderContainer.innerHTML = '';
 
   if (doc.isPdf) {
     pdfContainer.classList.remove('hidden');
     placeholderContainer.classList.add('hidden');
-    
+
     try {
       // Load PDF via PDF.js
       const loadingTask = pdfjsLib.getDocument(doc.fileUrl);
       currentPdfDoc = await loadingTask.promise;
-      
+
       // Render all pages
       for (let pageNum = 1; pageNum <= currentPdfDoc.numPages; pageNum++) {
         await renderPage(pageNum, pdfContainer, doc.name);
@@ -268,7 +268,7 @@ async function showDoc(doc) {
   } else {
     pdfContainer.classList.add('hidden');
     placeholderContainer.classList.remove('hidden');
-    
+
     // Non-PDF: show a styled placeholder
     const ext = doc.name.split('.').pop().toUpperCase();
     placeholderContainer.innerHTML = `
@@ -284,42 +284,42 @@ async function showDoc(doc) {
 
 async function renderPage(pageNum, container, filename) {
   const page = await currentPdfDoc.getPage(pageNum);
-  
+
   // Create wrapper
   const wrapper = document.createElement('div');
   wrapper.className = 'pdf-page-wrapper';
   wrapper.id = `pdf-page-${pageNum}`;
   wrapper.dataset.page = pageNum;
   wrapper.dataset.filename = filename;
-  
+
   // Set scale
   const viewport = page.getViewport({ scale: 1.2 });
   wrapper.style.width = `${viewport.width}px`;
   wrapper.style.height = `${viewport.height}px`;
-  
+
   // Create canvas
   const canvas = document.createElement('canvas');
   const context = canvas.getContext('2d');
   canvas.width = viewport.width;
   canvas.height = viewport.height;
   wrapper.appendChild(canvas);
-  
+
   // Create text layer
   const textLayerDiv = document.createElement('div');
   textLayerDiv.className = 'textLayer';
   textLayerDiv.style.width = `${viewport.width}px`;
   textLayerDiv.style.height = `${viewport.height}px`;
   wrapper.appendChild(textLayerDiv);
-  
+
   container.appendChild(wrapper);
-  
+
   // Render canvas
   const renderContext = {
     canvasContext: context,
     viewport: viewport
   };
   await page.render(renderContext).promise;
-  
+
   // Render text layer
   const textContent = await page.getTextContent();
   await pdfjsLib.renderTextLayer({
@@ -354,19 +354,19 @@ clearSessionBtn.addEventListener('click', () => {
 
   // Tell backend to permanently delete vectors, files, and chat history
   if (currentSessionId) {
-    fetch(`${API_BASE_URL}/session/${currentSessionId}`, { method: 'DELETE' }).catch(() => {});
+    fetch(`${API_BASE_URL}/session/${currentSessionId}`, { method: 'DELETE' }).catch(() => { });
   }
 
   // Reset state
   currentSessionId = null;
-  isPdfUploaded    = false;
-  uploadedDocs     = [];
+  isPdfUploaded = false;
+  uploadedDocs = [];
 
   // Reset UI
   docPanelActive.classList.add('hidden');
   docPanelEmpty.classList.remove('hidden');
   docTabsEl.innerHTML = '';
-  
+
   // Clear the inner containers instead of the parent viewer
   const pdfContainer = document.getElementById('pdf-container');
   const placeholderContainer = document.getElementById('placeholder-container');
@@ -375,7 +375,7 @@ clearSessionBtn.addEventListener('click', () => {
 
   btnAddDoc.classList.add('hidden');
   questionInput.disabled = true;
-  sendBtn.disabled       = true;
+  sendBtn.disabled = true;
 
   chatBox.innerHTML = `
     <div class="welcome-message">
@@ -390,9 +390,9 @@ clearSessionBtn.addEventListener('click', () => {
 // ENABLE CHAT
 // ═════════════════════════════════════════════════════════════════════════════
 function enableChat() {
-  isPdfUploaded          = true;
+  isPdfUploaded = true;
   questionInput.disabled = false;
-  sendBtn.disabled       = false;
+  sendBtn.disabled = false;
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
@@ -423,12 +423,12 @@ function appendMessage(role, content) {
     navigator.clipboard.writeText(msgDiv.dataset.rawContent || msgDiv.innerText);
     copyBtn.innerHTML = '<i data-lucide="check"></i>';
     setTimeout(() => {
-        copyBtn.innerHTML = '<i data-lucide="copy"></i>';
-        lucide.createIcons({ root: copyBtn });
+      copyBtn.innerHTML = '<i data-lucide="copy"></i>';
+      lucide.createIcons({ root: copyBtn });
     }, 2000);
     lucide.createIcons({ root: copyBtn });
   });
-  
+
   // Append to wrapper so it sits completely outside the bubble
   wrapper.appendChild(copyBtn);
 
@@ -472,7 +472,7 @@ chatBox.addEventListener('click', async (e) => {
 
     // If changing docs, show the new doc first
     const isChangingDoc = !docTabsEl.querySelector(`.doc-tab[data-name="${filename}"]`).classList.contains('active');
-    
+
     // Activate its tab
     [...docTabsEl.querySelectorAll('.doc-tab')].forEach(t => {
       if (t.dataset.name === filename) t.classList.add('active');
@@ -488,7 +488,7 @@ chatBox.addEventListener('click', async (e) => {
     const targetPage = document.getElementById(`pdf-page-${pageNum}`);
     if (targetPage) {
       targetPage.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      
+
       // Highlight the snippet if we have it
       if (window.currentSourcesData) {
         const snippetData = window.currentSourcesData.find(s => s.filename === filename && s.page === parseInt(pageNum));
@@ -502,14 +502,14 @@ chatBox.addEventListener('click', async (e) => {
 
 function highlightTextInLayer(textLayer, snippetText) {
   if (!textLayer || !snippetText) return;
-  
+
   // Basic normalization for matching
   const normalize = (s) => s.replace(/\s+/g, ' ').toLowerCase().trim();
   const searchStr = normalize(snippetText);
-  
+
   // We'll search by combining the text nodes sequentially
   const textNodes = Array.from(textLayer.querySelectorAll('span'));
-  
+
   // Clear old highlights in this layer
   textNodes.forEach(node => {
     if (node.innerHTML.includes('<mark>')) {
@@ -521,19 +521,19 @@ function highlightTextInLayer(textLayer, snippetText) {
   // we do a fuzzy search to find which spans contain the snippet words.
   // For simplicity, we'll mark any span whose text is significantly present in the snippet.
   const snippetWords = searchStr.split(' ').filter(w => w.length > 3);
-  
+
   if (snippetWords.length === 0) return;
 
   textNodes.forEach(node => {
     const nodeText = normalize(node.textContent);
     if (!nodeText) return;
-    
+
     // If the node text contains at least two meaningful words from the snippet, highlight it
     let matches = 0;
     for (const word of snippetWords) {
       if (nodeText.includes(word)) matches++;
     }
-    
+
     // Threshold to prevent random partial word highlighting
     if (matches >= Math.min(2, snippetWords.length)) {
       node.innerHTML = `<mark>${node.textContent}</mark>`;
@@ -555,9 +555,9 @@ chatForm.addEventListener('submit', async (e) => {
   if (!question) return;
 
   appendMessage('user', question);
-  questionInput.value    = '';
+  questionInput.value = '';
   questionInput.disabled = true;
-  sendBtn.disabled       = true;
+  sendBtn.disabled = true;
   thinkingPopup.classList.remove('hidden');
   scrollToBottom();
 
@@ -587,21 +587,21 @@ chatForm.addEventListener('submit', async (e) => {
       msgDiv.className = 'msg';
       msgDiv.innerHTML = '<div class="inline-typing"><span></span><span></span><span></span></div>';
       wrapper.appendChild(msgDiv);
-      
+
       // Add copy button specifically for the streaming bot message
       const copyBtn = document.createElement('button');
       copyBtn.className = 'btn-copy-msg';
       copyBtn.innerHTML = '<i data-lucide="copy"></i>';
       wrapper.appendChild(copyBtn);
-      
+
       chatBox.appendChild(wrapper);
       lucide.createIcons({ root: wrapper });
       scrollToBottom();
 
-      const reader  = res.body.getReader();
+      const reader = res.body.getReader();
       const decoder = new TextDecoder('utf-8');
-      let fullText   = '';
-      let buffer     = '';
+      let fullText = '';
+      let buffer = '';
       let firstToken = true;
 
       while (true) {
@@ -629,30 +629,30 @@ chatForm.addEventListener('submit', async (e) => {
           } catch (_) { /* ignore partial chunks */ }
         }
       }
-      
+
       // Update copy button raw content after stream finishes
       const existingCopyBtn = wrapper.querySelector('.btn-copy-msg');
       if (existingCopyBtn) {
-          existingCopyBtn.onclick = () => {
-              navigator.clipboard.writeText(fullText);
-              existingCopyBtn.innerHTML = '<i data-lucide="check"></i>';
-              setTimeout(() => {
-                  existingCopyBtn.innerHTML = '<i data-lucide="copy"></i>';
-                  lucide.createIcons({ root: existingCopyBtn });
-              }, 2000);
-              lucide.createIcons({ root: existingCopyBtn });
-          };
+        existingCopyBtn.onclick = () => {
+          navigator.clipboard.writeText(fullText);
+          existingCopyBtn.innerHTML = '<i data-lucide="check"></i>';
+          setTimeout(() => {
+            existingCopyBtn.innerHTML = '<i data-lucide="copy"></i>';
+            lucide.createIcons({ root: existingCopyBtn });
+          }, 2000);
+          lucide.createIcons({ root: existingCopyBtn });
+        };
       }
     }
 
     questionInput.disabled = false;
-    sendBtn.disabled       = false;
+    sendBtn.disabled = false;
     questionInput.focus();
 
   } catch (err) {
     thinkingPopup.classList.add('hidden');
     questionInput.disabled = false;
-    sendBtn.disabled       = false;
+    sendBtn.disabled = false;
     appendMessage('assistant', `**Error:** Network error — ${err.message}`);
   }
 });
@@ -663,9 +663,9 @@ chatForm.addEventListener('submit', async (e) => {
 window.addEventListener('beforeunload', () => {
   if (currentSessionId) {
     // keepalive ensures the request finishes even as the browser kills the page
-    fetch(`${API_BASE_URL}/session/${currentSessionId}`, { 
-      method: 'DELETE', 
-      keepalive: true 
-    }).catch(() => {});
+    fetch(`${API_BASE_URL}/session/${currentSessionId}`, {
+      method: 'DELETE',
+      keepalive: true
+    }).catch(() => { });
   }
 });
