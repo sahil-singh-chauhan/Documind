@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: documind-backend
+    env: python
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app:app --host 0.0.0.0 --port $PORT --workers 2 --timeout-keep-alive 65
+    plan: free
+    envVars:
+      - key: OPENAI_API_BASE
+        value: https://openrouter.ai/api/v1
+      - key: PINECONE_INDEX_NAME
+        value: apirag-1024
+    autoDeploy: true

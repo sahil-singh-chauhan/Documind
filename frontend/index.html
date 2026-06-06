@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DocuMind - RAG Assistant</title>
+    <link rel="icon" href="data:,">
+    <meta name="description" content="DocuMind — Chat with your documents using AI. Upload PDF, DOCX, or TXT and ask questions instantly." />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- PDF.js for custom PDF rendering and text highlighting -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    </script>
+    
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="app-layout">
+
+      <!-- ══════════════════════════════════════════════
+           LEFT PANEL — Document Viewer
+           ══════════════════════════════════════════════ -->
+      <div class="doc-panel" id="doc-panel">
+
+        <!-- STATE A: Empty — show upload zone (hidden once first doc uploaded) -->
+        <div class="doc-panel-empty" id="doc-panel-empty">
+          <div class="empty-logo">
+            <i data-lucide="book-open"></i>
+            <span>DocuMind</span>
+          </div>
+          <div class="upload-zone-wrapper">
+            <form id="upload-form-main">
+              <div class="drop-zone" id="drop-zone-main">
+                <i data-lucide="upload-cloud"></i>
+                <p class="drop-hint">Drag & drop your document here or <span>browse</span></p>
+                <p class="file-types-hint">PDF · DOCX · TXT</p>
+                <input type="file" id="pdf-file-main" accept=".pdf,.docx,.doc,.txt" />
+              </div>
+              <button type="submit" id="upload-btn-main" class="btn-primary" disabled>
+                <i data-lucide="upload"></i> Upload Document
+              </button>
+            </form>
+            <!-- Progress bar shown during upload -->
+            <div id="main-progress" class="drawer-progress hidden">
+              <div class="drawer-progress-row">
+                <span><i data-lucide="loader-2" class="spin"></i> Processing document…</span>
+                <span id="main-pct">0%</span>
+              </div>
+              <div class="progress-bar-container">
+                <div id="main-bar" class="progress-bar-fill"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- STATE B: Active — show doc tabs + viewer (hidden until first upload) -->
+        <div class="doc-panel-active hidden" id="doc-panel-active">
+
+          <!-- Tab bar across the top of the left panel -->
+          <div class="doc-tabs-bar" id="doc-tabs-bar">
+            <div class="doc-tabs" id="doc-tabs">
+              <!-- Tabs are injected by JS -->
+            </div>
+            <button class="btn-clear-session" id="clear-session-btn" title="Clear session">
+              <i data-lucide="trash-2"></i>
+            </button>
+          </div>
+
+          <!-- The viewer — PDF.js container or placeholder -->
+          <div class="doc-viewer" id="doc-viewer">
+            <!-- This will hold the scrolling PDF pages -->
+            <div id="pdf-container" class="pdf-container hidden"></div>
+            <!-- This will hold the placeholder for non-PDF files -->
+            <div id="placeholder-container" class="placeholder-container hidden"></div>
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- ══════════════════════════════════════════════
+           RIGHT PANEL — Chat Interface
+           ══════════════════════════════════════════════ -->
+      <div class="chat-panel">
+
+        <header class="chat-header">
+          <h2>Conversation</h2>
+          <!-- "Add Document" button — visible after first upload -->
+          <button class="btn-add-doc hidden" id="btn-add-doc" title="Upload another document">
+            <i data-lucide="file-plus"></i>
+            Add Document
+          </button>
+        </header>
+
+        <div id="chat-box" class="chat-box">
+          <div class="welcome-message">
+            <i data-lucide="bot"></i>
+            <h3>Welcome to DocuMind!</h3>
+            <p>Upload a document on the left to get started. You can ask anything about it — I'll answer instantly.</p>
+          </div>
+        </div>
+
+        <div id="thinking-popup" class="thinking-indicator hidden">
+          <div class="typing-dots"><span></span><span></span><span></span></div>
+          AI is thinking…
+        </div>
+
+        <div class="chat-input-wrapper">
+          <form id="chat-form" class="chat-form">
+            <input type="text" id="question" placeholder="Ask a question about your documents…" autocomplete="off" disabled />
+            <button type="submit" id="send-btn" class="btn-icon" disabled>
+              <i data-lucide="send"></i>
+            </button>
+          </form>
+        </div>
+
+      </div>
+
+    </div><!-- /.app-layout -->
+
+    <!-- ══════════════════════════════════════════════
+         UPLOAD DRAWER — slides in when "Add Document" clicked
+         ══════════════════════════════════════════════ -->
+    <div class="drawer-overlay hidden" id="drawer-overlay"></div>
+    <div class="upload-drawer hidden" id="upload-drawer">
+      <div class="drawer-header">
+        <span>Add Another Document</span>
+        <button class="btn-icon-sm" id="btn-close-drawer"><i data-lucide="x"></i></button>
+      </div>
+      <form id="upload-form-drawer">
+        <div class="drop-zone" id="drop-zone-drawer">
+          <i data-lucide="upload-cloud"></i>
+          <p class="drop-hint">Drag & drop file here or <span>browse</span></p>
+          <p class="file-types-hint">PDF · DOCX · TXT</p>
+          <input type="file" id="pdf-file-drawer" accept=".pdf,.docx,.doc,.txt" />
+        </div>
+        <button type="submit" id="upload-btn-drawer" class="btn-primary" disabled>
+          <i data-lucide="upload"></i> Upload Document
+        </button>
+      </form>
+      <!-- Progress indicator inside the drawer -->
+      <div id="drawer-progress" class="drawer-progress hidden">
+        <div class="drawer-progress-row">
+          <span><i data-lucide="loader-2" class="spin"></i> Processing…</span>
+          <span id="drawer-pct">0%</span>
+        </div>
+        <div class="progress-bar-container">
+          <div id="drawer-bar" class="progress-bar-fill"></div>
+        </div>
+      </div>
+    </div>
+
+    <script src="./main.js"></script>
+  </body>
+</html>
