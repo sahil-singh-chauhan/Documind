@@ -187,24 +187,31 @@ async def chat(request: Request, x_session_id: str = Header(None)):
         
         # 2. Return a StreamingResponse
         def event_generator():
-            full_answer = ""
-            for chunk in generate_answer_stream(namespace, question, chat_history, uploaded_files):
-                # We need to extract the text from the JSON chunk to save it to history
-                try:
-                    if chunk.startswith("data: "):
-                        chunk_data = json.loads(chunk[6:].strip())
-                        if "content" in chunk_data:
-                            full_answer += chunk_data["content"]
-                except Exception as e:
-                    print(f"DEBUG: Error parsing chunk for history: {e}")
-                    
-                yield chunk
-            
-            # Now save to Redis after the stream finishes!
-            chat_history.append({"role": "user", "content": question})
-            chat_history.append({"role": "assistant", "content": full_answer})
-            session_data["chat_history"] = chat_history
-            save_session_data(x_session_id, session_data)
+            try:
+                full_answer = ""
+                for chunk in generate_answer_stream(namespace, question, chat_history, uploaded_files):
+                    # We need to extract the text from the JSON chunk to save it to history
+                    try:
+                        if chunk.startswith("data: "):
+                            chunk_data = json.loads(chunk[6:].strip())
+                            if "content" in chunk_data:
+                                full_answer += chunk_data["content"]
+                    except Exception as e:
+                        print(f"DEBUG: Error parsing chunk for history: {e}")
+                        
+                    yield chunk
+                
+                # Now save to Redis after the stream finishes!
+                chat_history.append({"role": "user", "content": question})
+                chat_history.append({"role": "assistant", "content": full_answer})
+                session_data["chat_history"] = chat_history
+                save_session_data(x_session_id, session_data)
+            except Exception as e:
+                import traceback
+                traceback.print_exc()
+                error_msg = f"**System Crash:** {str(e)}\n\n*(Check Render Logs for full traceback)*"
+                yield f"data: {json.dumps({'content': error_msg})}\n\n"
+                yield f"data: {json.dumps({'done': True})}\n\n"
 
         return StreamingResponse(event_generator(), media_type="text/event-stream")
     except Exception as e:
