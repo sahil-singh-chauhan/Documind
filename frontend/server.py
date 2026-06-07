@@ -1,5 +1,5 @@
 """
-DocuMind Frontend Dev Server
+ExplainDoc Frontend Dev Server
 Run this from the frontend/ directory:  python server.py
 """
 import http.server
@@ -20,7 +20,7 @@ if __name__ == "__main__":
 
     with socketserver.TCPServer(("", PORT), SilentHandler) as httpd:
         print("")
-        print("  DocuMind Frontend")
+        print("  ExplainDoc Frontend")
         print("  -----------------")
         print(f"  Local:   http://localhost:{PORT}")
         print(f"  Network: http://127.0.0.1:{PORT}")

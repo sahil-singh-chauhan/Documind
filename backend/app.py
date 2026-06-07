@@ -85,7 +85,7 @@ def save_session_data(session_id: str, data: dict):
 
 @app.get("/")
 async def root():
-    return {"message": "DocuMind API Backend is running!"}
+    return {"message": "ExplainDoc API Backend is running!"}
 
 @app.post("/upload")
 async def upload_pdf(request: Request, file: UploadFile = File(...), x_session_id: str = Header(None)):

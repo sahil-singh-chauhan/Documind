@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: documind-backend
+    name: explaindoc-backend
     env: python
     rootDir: backend
     buildCommand: pip install -r requirements.txt
