@@ -1,4 +1,4 @@
-# ExplainDoc - API-Based PDF RAG Application
+# ExplainDoc - API-Based PDF RAG Application (Talking_pdf v2)
 
 ExplainDoc is a decoupled Retrieval-Augmented Generation (RAG) chat application that allows users to upload PDFs and ask questions about their content. The project is split into a pure static frontend and a stateless FastAPI backend, making it perfect for serverless hosting.
 
